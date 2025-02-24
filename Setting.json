@@ -1,0 +1,8 @@
+{
+    "password": "1234",
+    "Acces_type": "Local",
+    "Acces_type_example": "Local, Global, Manual_IP",
+    "Manual_IP_setup": "192.168.1.100",
+    "Port_WEB": "5000"
+  }
+  
