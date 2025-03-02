@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RGBSyncWeb - Главная</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
+  <link id="theme-style" rel="stylesheet" href="{{ url_for('static', filename='Index_Standart.css') }}">
+  <style>
+    body {
+      background-color: #121212;
+      color: #ffffff;
+    }
+
+    .theme-toggle {
+      position: fixed;
+      bottom: 15px;
+      left: 15px;
+      width: 40px;
+      height: 40px;
+      background: url("{{ url_for('static', filename='light-mode-icon.png') }}") no-repeat center;
+      background-size: cover;
+      cursor: pointer;
+      transition: transform 0.2s ease-in-out;
+      text-shadow: 0 0 10px #00daae, 0 0 20px #00c9a1, 0 0 30px #005645;
+    }
+
+    .theme-toggle:hover {
+      transform: scale(1.1);
+    }
+
+    .text_down {
+      background-color: #003d4240;
+      position: relative;
+      bottom: 0px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #ffffff45;
+      text-align: center;
+      width: 16%;
+      border-top-left-radius: 12px;
+      border-bottom-left-radius: 1px;
+      border-top-right-radius: 12px;
+      border-bottom-right-radius: 1px;
+    }
+    @media screen and (max-width: 768px) {
+      .text_down {
+        width: 90%;
+        font-size: 14px;
+        padding: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Управление подсветкой</h1>
+    
+    <div class="card">
+      <h2>Устройство</h2>
+      <label for="deviceSelect">Выберите устройство:</label>
+      <select id="deviceSelect" onchange="updateDeviceInfo()">
+        <option value="All">Все устройства</option>
+        {% for device in devices %}
+        <option value="{{ device }}">{{ device }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    
+    <div class="card">
+      <h2>Цвет</h2>
+      <div class="toggle-header" onclick="toggleElement('colorPickerContainer', this)">
+        <span class="arrow">▶</span> Сайта ColorPicker
+      </div>
+      <div id="colorPickerContainer" class="toggle-content">
+        <canvas id="colorWheel" width="400" height="400"></canvas><br>
+        <a id="saturation_value">Насыщеность (Яркость): 100</a><br>
+        <input type="range" id="saturation-slider" min="0" max="100" value="100" oninput="updateColorDisplay()">
+        <div id="selectedColorDisplay"></div>
+        <input type="text" id="colorInput" value="rgb(255, 255, 255)" oninput="manualColorChange()">
+        <button onclick="applyColor()">Применить цвет</button>
+      </div>
+      
+      <div class="toggle-header" onclick="toggleElement('systemColorPickerContainer', this)">
+        <span class="arrow">▶</span> Системный ColorPicker
+      </div>
+      <div id="systemColorPickerContainer" class="toggle-content">
+        <input type="color" id="colorPicker">
+        <button onclick="setColor()">Применить цвет</button>
+      </div>
+
+      <div style="margin-top: 10px;">
+        <label>Текущий цвет устройства:</label>
+        <div id="currentColor"></div>
+        <div class="color-theme-btns">
+          <br>
+          <label>Заготовки ночные:</label>
+          <div class="color-panel" style="background-color: #6a1300;" title="Ночной оранжевый" onclick="setColor_Faster('Night_Orange')"></div>
+          <div class="color-panel" style="background-color: rgb(0, 8, 45);" title="Ночной синий" onclick="setColor_Faster('Night_Blue')"></div>
+          <div class="color-panel" style="background-color: rgb(0, 45, 0);" title="Ночной зеленый" onclick="setColor_Faster('Night_Green')"></div>
+          <div class="color-panel" style="background-color: rgb(0, 56, 51);" title="Ночной бирюзовый" onclick="setColor_Faster('Night_Turquoise')"></div>
+        </div>
+        <div class="color-theme-btns">
+          <br>
+          <label>Заготовки дневные:</label>
+          <div class="color-panel" style="background-color: rgb(255, 59, 0);" title="Дневной оранжевый" onclick="setColor_Faster('Day_Orange')"></div>
+          <div class="color-panel" style="background-color: rgb(0, 0, 255);" title="Дневной синий" onclick="setColor_Faster('Day_Blue')"></div>
+          <div class="color-panel" style="background-color: rgb(0, 255, 0);" title="Дневной зеленый" onclick="setColor_Faster('Day_Green')"></div>
+          <div class="color-panel" style="background-color: rgb(0, 221, 201);" title="Дневной бирюзовый" onclick="setColor_Faster('Day_Turquoise')"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>Режим и Яркость</h2>
+      <label for="modeSelect">Выберите режим:</label>
+      <select id="modeSelect">
+        {% for mode in modes %}
+        <option value="{{ mode }}">{{ mode }}</option>
+        {% endfor %}
+      </select>
+      <button onclick="setMode()">Применить режим</button>
+      <label for="brightnessSlider">Яркость:</label>
+      <input type="range" id="brightnessSlider" min="0" max="100" value="100" onchange="setBrightness()">
+      <span id="brightnessValue">100%</span>
+    </div>
+    
+    <div class="card">
+      <button onclick="turnOff()">Выключить подсветку (Все устройства)</button>
+      <button onclick="RedirectDocumentation()">Документация</button>
+      <br><br>
+      <label>By FireTIA | HTML/CSS + Python + OpenRGB</label>
+      <label>RGBSyncWeb v0.9.7</label>
+    </div>
+  </div>
+  <br>
+
+  <div class="text_down">
+    RGBSyncWeb v0.9.7<br>
+    <a id="theme-name">Standart v1 | By FireTIA</a>
+  </div>
+  <div class="theme-toggle" onclick="toggleStyle()">🔄</div>
+
+  <script>
+    const canvas = document.getElementById('colorWheel');
+    const obj_saturation_value = document.getElementById('saturation_value');
+    const ctx = canvas.getContext('2d');
+    const slider = document.getElementById('saturation-slider');
+    const colorDisplay = document.getElementById('selectedColorDisplay');
+    const colorInput = document.getElementById('colorInput');
+    let selectedColor = { r: 255, g: 255, b: 255 };
+    let isDragging = false;
+
+    window.onload = function () {
+      drawColorWheel();
+      updateDeviceInfo(); 
+      loadTheme(); 
+    };
+
+    window.addEventListener("load", resizeCanvas);
+    window.addEventListener("resize", resizeCanvas);
+
+    canvas.addEventListener('mousedown', () => isDragging = true);
+    canvas.addEventListener('mouseup', () => isDragging = false);
+    canvas.addEventListener('mousemove', (event) => {
+      if (isDragging) {
+        pickColor(event);
+      }
+    });
+
+    function pickColor(event) {
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const pixel = ctx.getImageData(x, y, 1, 1).data;
+      selectedColor = { r: pixel[0], g: pixel[1], b: pixel[2] };
+      updateColorDisplay();
+    }
+
+    function drawColorWheel() {
+      const image = ctx.createImageData(canvas.width, canvas.height);
+      const { width, height } = canvas;
+      const radius = width / 2;
+      
+      for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+          const dx = x - radius;
+          const dy = y - radius;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          if (distance > radius) continue;
+          
+          const angle = Math.atan2(dy, dx) * (180 / Math.PI) + 180;
+          const hue = angle;
+          const sat = distance / radius * 100;
+          
+          const { r, g, b } = hslToRgb(hue / 360, sat / 100, 0.5);
+          const index = (y * width + x) * 4;
+          image.data[index] = r;
+          image.data[index + 1] = g;
+          image.data[index + 2] = b;
+          image.data[index + 3] = 255;
+        }
+      }
+      ctx.putImageData(image, 0, 0);
+    }
+    
+    function hslToRgb(h, s, l) {
+      let r, g, b;
+      if (s == 0) {
+        r = g = b = l;
+      } else {
+        const hue2rgb = (p, q, t) => {
+          if (t < 0) t += 1;
+          if (t > 1) t -= 1;
+          if (t < 1/6) return p + (q - p) * 6 * t;
+          if (t < 1/2) return q;
+          if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+          return p;
+        };
+        
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+      }
+      return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
+    }
+    
+    canvas.addEventListener('click', function(event) {
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const pixel = ctx.getImageData(x, y, 1, 1).data;
+      selectedColor = { r: pixel[0], g: pixel[1], b: pixel[2] };
+
+      
+
+      const adjustedColor_math = {
+        r: Math.round(selectedColor.r / 100),
+        g: Math.round(selectedColor.g / 100),
+        b: Math.round(selectedColor.b / 100)
+      };
+      colorInput.value = `rgb(${adjustedColor_math.r}, ${adjustedColor_math.g}, ${adjustedColor_math.b})`;
+      slider.style.background = `linear-gradient(to right, rgb(${adjustedColor_math.r}, ${adjustedColor_math.g}, ${adjustedColor_math.b}), rgb(${selectedColor.r}, ${selectedColor.g}, ${selectedColor.b}))`;
+
+      updateColorDisplay();
+    });
+
+    function resizeCanvas() {
+      const canvas = document.getElementById("colorWheel");
+        
+      if (window.innerWidth <= 768) { 
+        canvas.width = 300;
+        canvas.height = 300;
+      } else { 
+        canvas.width = 400;
+        canvas.height = 400;
+      }
+
+        drawColorWheel();
+    }
+    
+    function updateColorDisplay() {
+      const saturation = slider.value / 100;
+      const adjustedColor = {
+        r: Math.round(selectedColor.r * saturation),
+        g: Math.round(selectedColor.g * saturation),
+        b: Math.round(selectedColor.b * saturation)
+      };
+      
+      const adjustedColor_math = {
+        r: Math.round(selectedColor.r / 100),
+        g: Math.round(selectedColor.g / 100),
+        b: Math.round(selectedColor.b / 100)
+      };
+      
+      colorDisplay.style.backgroundColor = `rgb(${adjustedColor.r}, ${adjustedColor.g}, ${adjustedColor.b})`;
+      colorInput.value = `rgb(${adjustedColor.r}, ${adjustedColor.g}, ${adjustedColor.b})`;
+
+      slider.style.background = `linear-gradient(to right, rgb(${adjustedColor_math.r}, ${adjustedColor_math.g}, ${adjustedColor_math.b}), rgb(${selectedColor.r}, ${selectedColor.g}, ${selectedColor.b}))`;
+      
+      obj_saturation_value.textContent = `Насыщеность (Яркость): ${slider.value}`
+    }
+
+    function manualColorChange() {
+      const rgbMatch = colorInput.value.match(/^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/);
+      if (rgbMatch) {
+        selectedColor = {
+          r: Math.min(255, Math.max(0, parseInt(rgbMatch[1]))),
+          g: Math.min(255, Math.max(0, parseInt(rgbMatch[2]))),
+          b: Math.min(255, Math.max(0, parseInt(rgbMatch[3])))
+        };
+        updateColorDisplay();
+      }
+    }
+    
+    function applyColor() {
+      const saturation = slider.value / 100;
+      const adjustedColor = {
+        r: Math.round(selectedColor.r * saturation),
+        g: Math.round(selectedColor.g * saturation),
+        b: Math.round(selectedColor.b * saturation)
+      };
+      let device = document.getElementById("deviceSelect").value;
+      
+      fetch('/set_color', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          r: adjustedColor.r, 
+          g: adjustedColor.g, 
+          b: adjustedColor.b, 
+          device 
+        })
+      }).then(response => response.json()).then(data => {
+        console.log('Цвет отправлен:', data);
+        
+        let rgb = `rgb(${adjustedColor.r}, ${adjustedColor.g}, ${adjustedColor.b})`;
+        let currentColorDiv_currentColor = document.getElementById("currentColor");
+        let currentColorDiv_selectedColorDisplay = document.getElementById("selectedColorDisplay"); 
+        currentColorDiv_currentColor.style.backgroundColor = rgb;
+        currentColorDiv_selectedColorDisplay.style.backgroundColor = rgb;
+
+
+        currentColorDiv_currentColor.style.boxShadow = `0px 4px 10px rgba(${adjustedColor.r}, ${adjustedColor.g}, ${adjustedColor.b}, 0.7)`;
+        currentColorDiv_selectedColorDisplay.style.boxShadow = `0px 4px 10px rgba(${adjustedColor.r}, ${adjustedColor.g}, ${adjustedColor.b}, 0.7)`;
+
+        document.querySelectorAll('.card').forEach(card => {
+          card.style.boxShadow = `0px 4px 10px rgba(${adjustedColor.r}, ${adjustedColor.g}, ${adjustedColor.b}, 0.7)`;
+        });
+      });
+      
+    }
+    
+    function toggleStyle() {
+        let theme = document.getElementById("theme-style");
+        let themeToggle = document.querySelector(".theme-toggle");
+        let themeName = document.getElementById("theme-name");
+
+        if (theme.getAttribute("href").includes("Index_Standart.css")) {
+            themeName.textContent = "CrystalTheme v1 | By FireTIA";
+            theme.setAttribute("href", "{{ url_for('static', filename='Index_Crystal.css') }}");
+            localStorage.setItem("theme-page-index", "Index_Crystal.css");
+        } else {
+            themeName.textContent = "Standart v1 | By FireTIA";
+            theme.setAttribute("href", "{{ url_for('static', filename='Index_Standart.css') }}");
+            localStorage.setItem("theme-page-index", "Index_Standart.css");
+        }
+    }
+
+    function loadTheme() {
+      let savedTheme = localStorage.getItem("theme-page-index");
+      if (savedTheme) {
+        document.getElementById("theme-style").setAttribute("href", `/static/${savedTheme}`);
+      }
+    }
+
+    function setColor() {
+      let color = document.getElementById("colorPicker").value;
+      let r = parseInt(color.substr(1, 2), 16);
+      let g = parseInt(color.substr(3, 2), 16);
+      let b = parseInt(color.substr(5, 2), 16);
+      let device = document.getElementById("deviceSelect").value;
+
+      fetch('/set_color', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ r, g, b, device })
+      }).then(response => response.json()).then(data => {
+        console.log(data);
+        updateDeviceInfo();
+      });
+    }
+
+    function setColor_Faster(theme_color) {
+        let device = document.getElementById("deviceSelect").value;
+
+        let r, g, b;
+
+        if (theme_color === "Night_Orange") {
+            r = 45;
+            g = 8;
+            b = 0;
+        } else if (theme_color === 'Night_Blue') {
+            r = 0;
+            g = 8;
+            b = 45;
+        } else if (theme_color === 'Night_Green') {
+            r = 0;
+            g = 45;
+            b = 0;
+        } else if (theme_color === 'Night_Turquoise') {
+            r = 0;
+            g = 56;
+            b = 51;
+        } else if (theme_color === 'Day_Orange') {
+            r = 255;
+            g = 59;
+            b = 0;
+        } else if (theme_color === 'Day_Blue') {
+            r = 0;
+            g = 8;
+            b = 255;
+        } else if (theme_color === 'Day_Green') {
+            r = 0;
+            g = 255;
+            b = 0;
+        } else if (theme_color === 'Day_Turquoise') {
+            r = 0;
+            g = 221;
+            b = 201;
+        } else {
+            r = 12;
+            g = 12;
+            b = 12;
+        }
+
+        fetch('/set_color', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ r, g, b, device })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            updateDeviceInfo();
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+        });
+    }
+
+    function turnOff() {
+      fetch('/turn_off', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      }).then(response => response.json()).then(data => {
+        console.log(data);
+        updateDeviceInfo();
+      });
+    }
+
+    function RedirectDocumentation() {
+      window.location.href = '/Open_Documentation';
+    }
+
+    function setMode() {
+      let mode = document.getElementById("modeSelect").value;
+      let device = document.getElementById("deviceSelect").value;
+
+      fetch('/set_mode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode, device })
+      }).then(response => response.json()).then(data => {
+        console.log(data);
+      });
+    }
+
+    function setBrightness() {
+      let brightness = document.getElementById("brightnessSlider").value;
+      document.getElementById("brightnessValue").innerText = brightness + "%";
+      let device = document.getElementById("deviceSelect").value;
+
+      fetch('/set_brightness', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brightness, device })
+      }).then(response => response.json()).then(data => {
+        console.log(data);
+      });
+    }
+
+    function updateDeviceInfo() {
+      let device = document.getElementById("deviceSelect").value;
+      fetch(`/get_device_info?device=${device}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.length > 0) {
+            let color = data[0].color;
+            let rgb = `rgb(${color.r}, ${color.g}, ${color.b})`;
+            let currentColorDiv_currentColor = document.getElementById("currentColor");
+            let currentColorDiv_selectedColorDisplay = document.getElementById("selectedColorDisplay"); 
+            currentColorDiv_currentColor.style.backgroundColor = rgb;
+            currentColorDiv_selectedColorDisplay.style.backgroundColor = rgb;
+            colorInput.value = `rgb(${color.r}, ${color.g}, ${color.b})`;
+            selectedColor = { r: color.r, g: color.g, b: color.b };
+
+            const adjustedColor_math = {
+              r: Math.round(selectedColor.r / 100),
+              g: Math.round(selectedColor.g / 100),
+              b: Math.round(selectedColor.b / 100)
+            };
+            slider.style.background = `linear-gradient(to right, rgb(${adjustedColor_math.r}, ${adjustedColor_math.g}, ${adjustedColor_math.b}), rgb(${selectedColor.r}, ${selectedColor.g}, ${selectedColor.b}))`;
+
+            currentColorDiv_currentColor.style.boxShadow = `0px 4px 10px rgba(${color.r}, ${color.g}, ${color.b}, 0.7)`;
+            currentColorDiv_selectedColorDisplay.style.boxShadow = `0px 4px 10px rgba(${color.r}, ${color.g}, ${color.b}, 0.7)`;
+
+            document.querySelectorAll('.card').forEach(card => {
+              card.style.boxShadow = `0px 4px 10px rgba(${color.r}, ${color.g}, ${color.b}, 0.7)`;
+            });
+          }
+        });
+
+      let modesSelect = document.getElementById("modeSelect");
+      modesSelect.innerHTML = '';
+
+      fetch(`/get_device_modes?device=${device}`)
+        .then(response => response.json())
+        .then(modes => {
+          modes.forEach(mode => {
+            let option = document.createElement("option");
+            option.value = mode;
+            option.innerText = mode;
+            modesSelect.appendChild(option);
+          });
+        });
+    }
+
+    function toggleElement(id, header) {
+      let element = document.getElementById(id);
+      if (element.style.maxHeight === "0px" || !element.style.maxHeight) {
+          element.style.maxHeight = element.scrollHeight + "px";
+          header.querySelector(".arrow").style.transform = "rotate(90deg)";
+      } else {
+          element.style.maxHeight = "0px";
+          header.querySelector(".arrow").style.transform = "rotate(0deg)";
+      }
+    }
+  </script>
+</body>
+</html>
